@@ -55,6 +55,8 @@ namespace FormulaEvaluator
 							{
 								int t = values.Pop();
 								int n = int.Parse(temp);
+								if(n == 0)
+									throw new DivideByZeroException();
 								t = t / n;
 								values.Push(t);
 								operators.Pop();
@@ -62,9 +64,10 @@ namespace FormulaEvaluator
 							}
 
 						}
+						else throw new InvalidOperationException("Invalid expression syntax. Please try again");
 
 						//If no math was performed, push temp onto the values stack
-						if(!didMath)
+						if (!didMath)
 						{
 							values.Push(int.Parse(temp));
 						}
@@ -96,16 +99,17 @@ namespace FormulaEvaluator
 									{
 										values.Push(num1 - num2);
 									}
-									
-									
+
+
 									else
 									{
 										values.Push(num1 + num2);
 									}
 
-									
+
 								}
 							}
+							else throw new InvalidOperationException("Invalid expression syntax. Please try again");
 
 							operators.Push(op);
 
@@ -135,6 +139,7 @@ namespace FormulaEvaluator
 
 								}
 							}
+							else throw new InvalidOperationException("Invalid expression syntax. Please try again");
 
 							//Remove the ( operator
 							operators.Pop();
@@ -147,9 +152,14 @@ namespace FormulaEvaluator
 								{
 									int num1 = values.Pop();
 									int num2 = values.Pop();
-									operators.Pop();
+									if(operators.Peek() == '(')
+										operators.Pop();
+									else throw new InvalidOperationException("Invalid expression syntax. Please try again");
+
 									if (op == '/')
 									{
+										if (num2 == 0)
+											throw new DivideByZeroException("Your expression cannot divide by zero");
 										values.Push(num1 / num2);
 									}
 									else
@@ -165,9 +175,16 @@ namespace FormulaEvaluator
                     //If temp is a variable
                     else
                     {
-						//Get variable value
-						int n = variableEvaluator(temp);
-
+						//Get variable 
+						int n;
+						try
+						{
+							n = variableEvaluator(temp);
+						}
+                        catch (ArgumentException e)
+                        {
+							throw new ArgumentException("Variable not found");
+                        }
 						//Evaluate expression with the variable's value
 						bool didMath = false;
 
@@ -188,6 +205,8 @@ namespace FormulaEvaluator
 							else if (operators.Peek() == '/')
 							{
 								int t = values.Pop();
+								if (n == 0)
+									throw new DivideByZeroException("Your expression cannot divide by zero");
 								t = t / n;
 								values.Push(t);
 								operators.Pop();
