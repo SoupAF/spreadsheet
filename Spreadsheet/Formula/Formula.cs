@@ -45,8 +45,8 @@ namespace SpreadsheetUtilities
     /// </summary>
     public class Formula
     {
+        //Stores each of the tokens in a given formula
         private List<String> tokens;
-
 
         /// <summary>
         /// Creates a Formula from a string that consists of an infix expression written as
@@ -59,98 +59,7 @@ namespace SpreadsheetUtilities
         public Formula(String formula) :
             this(formula, s => s, s => true)
         {
-
-            int openParCount = 0;
-            int closeParCount = 0;
-
-            //Split input string into individual tokens
-            tokens = new List<String>(GetTokens(formula));
-
-            //Check that all tokens are valid
-            for (int i = 0; i < tokens.Count; i++)
-            {
-                //Check if a token is a number
-                if (!int.TryParse(tokens.ElementAt(i), out _))
-                {
-                    //Check that a token is a valid operator
-                    if (tokens.ElementAt(i) != "(" && tokens.ElementAt(i) != ")" && tokens.ElementAt(i) != "+" && tokens.ElementAt(i) != "-" && tokens.ElementAt(i) != "*" && tokens.ElementAt(i) != "/")
-                    {
-
-
-                        //Check if a token is a variable
-                        char[] chars = tokens.ElementAt(i).ToCharArray();
-
-                        //Check first char
-                        if (!Char.IsLetter(chars[0]) || chars[0] == '_')
-                            throw new ArgumentException("Invalid variable syntax. The first character needs to be a letter or underscore");
-                        //Check the rest
-                        for (int t = 1; t < chars.Length; t++)
-                        {
-                            if (!Char.IsDigit(chars[t]) && !Char.IsLetter(chars[0]) && chars[0] == '_')
-                            {
-                                throw new ArgumentException("Invalid variable syntax. Only letters, numbers, and underscores are permitted in variable names");
-                            }
-                        }
-                    }
-                }
-
-                //Increment parenthesis counts
-                if (tokens.ElementAt(i) == "(")
-                    openParCount++;
-
-                else if (tokens.ElementAt(i) == ")")
-                {
-                    closeParCount++;
-                    //Right parenthesis rule check
-                    if (closeParCount > openParCount)
-                        throw new FormulaFormatException("You have too many right paranthesis in your formula. Remove them, or add the corresponding left parenthesis");
-                }
-
-            }
-
-            //Evaluate resluts for syntactical errors
-            //One token rule
-            if (tokens == null)
-                throw new FormulaFormatException("Your formula cannot be empty");
-
-            //Balanced parenthises rule
-            if (closeParCount != openParCount)
-                throw new FormulaFormatException("Your formula has not enough right parenthesis. Either add more, or remove some left parenthesis");
-
-            //Starting token rule
-            if ((tokens.ElementAt(0) != "_" || !Char.IsLetter(tokens.ElementAt(0)[0])) && tokens.ElementAt(0) != "(" && !int.TryParse(tokens.ElementAt(0), out _))
-                throw new FormulaFormatException("Your formula cannot begin with any operators that are not (");
-
-            //Ending token rule
-            if ((tokens.ElementAt(tokens.Count-1) != "_" || !Char.IsLetter(tokens.ElementAt(tokens.Count - 1)[0])) && tokens.ElementAt(tokens.Count - 1) != "(" && !int.TryParse(tokens.ElementAt(tokens.Count - 1), out _))
-                throw new FormulaFormatException("Your formula cannot end with any operators that are not )");
-
-            //Operator following rule and extra following rule
-            for(int i = 0; i < tokens.Count-1; i++)
-            {
-                string token1 = tokens.ElementAt(i);
-                string token2 = tokens.ElementAt(i + 1);
-
-                //If token1 is an operator or opening parenthesis
-                if(token1 == "(" || token1 == "+" || token1 == "-" || token1 == "*" || token1 == "/")
-                {
-                    //Check that token2 is not also an operator or opening parenthesis
-                    if (token2 == "(" || token2 == "+" || token2 == "-" || token2 == "*" || token2 == "/")
-                    {
-                        throw new FormulaFormatException("Your formula cannot have two operators or left parenthesis following one another");
-                    }
-
-                    //Check the other case, if token1 is not one of the above catgories
-                    else
-                    {
-                        //Make sure token2 is not also in the same category as token1
-                        if (token2 != "(" || token2 != "+" || token2 != "-" || token2 != "*" || token2 != "/")
-                        {
-                            throw new FormulaFormatException("Your formula cannot have two numbers, variables, or right parenthesis following one another");
-                        }
-                    }
-                }
-            }
+           //This constructor can be empty becasue it runs the other constructor anyways
         }
 
         /// <summary>
@@ -189,10 +98,11 @@ namespace SpreadsheetUtilities
             {
                 
                 //Check if a token is a number
-                if (!int.TryParse(tokens.ElementAt(i), out _))
+                if (!double.TryParse(tokens.ElementAt(i), out _))
                 {
                     //Check that a token is a valid operator
-                    if (tokens.ElementAt(i) != "(" && tokens.ElementAt(i) != ")" && tokens.ElementAt(i) != "+" && tokens.ElementAt(i) != "-" && tokens.ElementAt(i) != "*" && tokens.ElementAt(i) != "/")
+                    if (tokens.ElementAt(i) != "(" && tokens.ElementAt(i) != ")" && tokens.ElementAt(i) != "+" 
+                        && tokens.ElementAt(i) != "-" && tokens.ElementAt(i) != "*" && tokens.ElementAt(i) != "/")
                     {
                         //Check if a token is a variable
                         char[] chars = tokens.ElementAt(i).ToCharArray();
@@ -210,8 +120,9 @@ namespace SpreadsheetUtilities
                         }
 
                         //Normalize the variable, then make sure it passes through the given validator
+                        string temp = normalize(tokens.ElementAt(i));
                         tokens.RemoveAt(i);
-                        tokens.Insert(i, normalize(tokens.ElementAt(i)));
+                        tokens.Insert(i, temp);
 
                         if (!isValid(tokens.ElementAt(i)))
                             throw new FormulaFormatException("Your variable is not valid according to your validation settings. Either change the validation method, or rename the variable");
@@ -243,11 +154,11 @@ namespace SpreadsheetUtilities
                 throw new FormulaFormatException("Your formula has not enough right parenthesis. Either add more, or remove some left parenthesis");
 
             //Starting token rule
-            if ((tokens.ElementAt(0) != "_" || !Char.IsLetter(tokens.ElementAt(0)[0])) && tokens.ElementAt(0) != "(" && !int.TryParse(tokens.ElementAt(0), out _))
+            if (tokens.ElementAt(0) != "_" && !Char.IsLetter(tokens.ElementAt(0)[0]) && tokens.ElementAt(0) != "(" && !double.TryParse(tokens.ElementAt(0), out _))
                 throw new FormulaFormatException("Your formula cannot begin with any operators that are not (");
 
             //Ending token rule
-            if ((tokens.ElementAt(tokens.Count - 1) != "_" || !Char.IsLetter(tokens.ElementAt(tokens.Count - 1)[0])) && tokens.ElementAt(tokens.Count - 1) != "(" && !int.TryParse(tokens.ElementAt(tokens.Count - 1), out _))
+            if ((tokens.ElementAt(tokens.Count - 1) != "_" && !Char.IsLetter(tokens.ElementAt(tokens.Count - 1)[0])) && tokens.ElementAt(tokens.Count - 1) != "(" && !double.TryParse(tokens.ElementAt(tokens.Count - 1), out _))
                 throw new FormulaFormatException("Your formula cannot end with any operators that are not )");
 
             //Operator following rule and extra following rule
@@ -259,22 +170,27 @@ namespace SpreadsheetUtilities
                 //If token1 is an operator or opening parenthesis
                 if (token1 == "(" || token1 == "+" || token1 == "-" || token1 == "*" || token1 == "/")
                 {
-                    //Check that token2 is not also an operator or opening parenthesis
-                    if (token2 == "(" || token2 == "+" || token2 == "-" || token2 == "*" || token2 == "/")
+                    //Check that token2 is not also an operator
+                    if (token2 == "+" || token2 == "-" || token2 == "*" || token2 == "/")
                     {
                         throw new FormulaFormatException("Your formula cannot have two operators or left parenthesis following one another");
                     }
+                }
+                //Make sure there isn't two parenthesis in a row
+                else if(token1 == "(" && token2 == "(")
+                    throw new FormulaFormatException("Your formula cannot have two operators or left parenthesis following one another");
 
-                    //Check the other case, if token1 is not one of the above catgories
-                    else
+                //Check the other case, if token1 is not one of the above catgories
+                else
+                {
+                    
+                    //Make sure token2 is not also in the same category as token1
+                    if (token2 != ")" && token2 != "+" && token2 != "-" && token2 != "*" && token2 != "/")
                     {
-                        //Make sure token2 is not also in the same category as token1
-                        if (token2 != "(" || token2 != "+" || token2 != "-" || token2 != "*" || token2 != "/")
-                        {
-                            throw new FormulaFormatException("Your formula cannot have two numbers, variables, or right parenthesis following one another");
-                        }
+                        throw new FormulaFormatException("Your formula cannot have two numbers, variables, or right parenthesis following one another");
                     }
                 }
+                
             }
 
         }
@@ -302,7 +218,267 @@ namespace SpreadsheetUtilities
         /// </summary>
         public object Evaluate(Func<string, double> lookup)
         {
-            return null;
+            Stack<char> operators = new Stack<char>();
+            Stack<double> values = new Stack<double>();
+
+            //Keeps track of how many open parenthesis there are
+            int openParCount = 0;
+            int closeParCount = 0;
+
+
+
+            //Divide characters to the correct stacks (remove whitespace chars)
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                String temp = tokens.ElementAt(i);
+
+                if (temp != " " && temp != "")
+                {
+                    //If temp is a number
+                    if (double.TryParse(temp, out _))
+                    {
+                        bool didMath = false;
+
+                        //Check if there is an operator on the stack
+                        if (operators.Count != 0)
+                        {
+
+                            if (operators.Peek() == '*')
+                            {
+                                double t = values.Pop();
+                                double n = double.Parse(temp);
+                                t = t * n;
+                                values.Push(t);
+                                operators.Pop();
+                                didMath = true;
+                            }
+
+                            else if (operators.Peek() == '/')
+                            {
+                                double t = values.Pop();
+                                double n = double.Parse(temp);
+                                if (n == 0)
+                                    return new FormulaError("Your formula cannot include division by zero");
+                                t = t / n;
+                                values.Push(t);
+                                operators.Pop();
+                                didMath = true;
+                            }
+
+                        }
+
+                        //If no math was performed, push temp onto the values stack
+                        if (!didMath)
+                        {
+                            values.Push(double.Parse(temp));
+                        }
+                    }
+
+
+                    //If temp is an operator
+                    else if (Char.TryParse(temp, out char op) && (op == '/' || op == '*' || op == '+' || op == '-' || op == '(' || op == ')'))
+                    {
+                        //For /, *, or ( operators, push them onto the operators stack
+                        if (op == '/' || op == '*')
+                        {
+                            operators.Push(op);
+                        }
+
+                        if (op == '(')
+                        {
+                            operators.Push(op);
+                            openParCount++;
+                        }
+
+                        //If the operator is + or -
+                        else if (op == '+' || op == '-')
+                        {
+                            //Check if stack is empty
+                            if (operators.Count != 0)
+                            {
+                                //If there is already a + or minus on the stack, evaluate it, and then remplace it with temp
+                                if (operators.Peek() == '+' || operators.Peek() == '-')
+                                {
+                                    double num1 = values.Pop();
+                                    double num2 = values.Pop();
+                                    char pastOp = operators.Pop();
+                                    if (pastOp == '-')
+                                    {
+                                        values.Push(num2 - num1);
+                                    }
+
+
+                                    else
+                                    {
+                                        values.Push(num1 + num2);
+                                    }
+
+                                }
+                            }
+
+                            operators.Push(op);
+
+                        }
+
+
+                        //For ) operators
+                        else if (op == ')')
+                        {
+                            /*
+                            //Check that there is a corrosponding open paranthesis already
+                            closeParCount++;
+                            if (openParCount < closeParCount)
+                                throw new ArgumentException("Invalid formula sytax");
+                            */
+
+                            //Check if stack is empty
+                            if (operators.Count != 0)
+                            {
+                                //Evaluate any addition or subratction operators if they are present ontop of the stack
+                                if (operators.Peek() == '+' || operators.Peek() == '-')
+                                {
+                                    double num1 = values.Pop();
+                                    double num2 = values.Pop();
+                                    char op2 = operators.Pop();
+                                    if (op2 == '-')
+                                    {
+                                        values.Push(num2 - num1);
+                                    }
+                                    else
+                                    {
+                                        values.Push(num1 + num2);
+                                    }
+
+                                }
+                            }
+
+                            
+
+                            //Remove the ( operator
+                            operators.Pop();
+                            openParCount--;
+                            closeParCount--;
+
+                            //Check if stack is empty
+                            if (operators.Count != 0)
+                            {
+                                //Evaluate Multiplication or division if it is ontop of the stack
+                                if (operators.Peek() == '*' || operators.Peek() == '/')
+                                {
+                                    double num1 = values.Pop();
+                                    double num2 = values.Pop();
+                                    if (operators.Peek() == '(')
+                                        operators.Pop();
+
+                                    op = operators.Pop();
+
+                                    if (op == '/')
+                                    {
+                                        if (num2 == 0)
+                                            return new FormulaError("Your formula cannot inculde division by zero");
+                                        values.Push(num1 / num2);
+                                    }
+                                    else
+                                    {
+                                        values.Push(num1 * num2);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                    //If temp is a variable
+                    else
+                    {
+                        /*
+                        //Check for valid variabe format
+
+                        char[] chars = temp.ToCharArray();
+
+                        //Check first char
+                        if (!Char.IsLetter(chars[0]))
+                            throw new ArgumentException("Invalid variable syntax");
+                        //Check the rest
+                        for (int t = 1; t < chars.Length; t++)
+                        {
+                            if (!Char.IsDigit(chars[t]))
+                            {
+                                throw new ArgumentException("Invalid variable syntax");
+                            }
+                        }
+                        */
+
+                        //Get variable 
+                        double n;
+                        try
+                        {
+                            n = lookup(temp);
+                        }
+                        catch (ArgumentException e)
+                        {
+                            return new FormulaError("Your variable could not be found. Please check that your variable is defined and spelled correctly");
+                        }
+                        //Evaluate expression with the variable's value
+                        bool didMath = false;
+
+                        //Check if there is an operator on the stack
+                        if (operators.Count != 0)
+                        {
+                            //Multiply
+                            if (operators.Peek() == '*')
+                            {
+                                double t = values.Pop();
+                                t = t * n;
+                                values.Push(t);
+                                operators.Pop();
+                                didMath = true;
+                            }
+
+                            //Divide
+                            else if (operators.Peek() == '/')
+                            {
+                                double t = values.Pop();
+                                if (n == 0)
+                                    return new FormulaError("Your formula canot include division by zero");
+                                t = t / n;
+                                values.Push(t);
+                                operators.Pop();
+                                didMath = true;
+                            }
+
+                        }
+
+                        if (!didMath)
+                        {
+                            values.Push(n);
+                        }
+                    }
+                }
+            }
+
+            //If there are no more operations
+            if (operators.Count() == 0)
+            {
+                return values.Pop();
+            }
+
+            //If there is any remaining addition or subtraction, evaluate it
+            else
+            {
+                
+
+                char ch = operators.Pop();
+
+                if (ch == '-')
+                {
+                    double num1 = values.Pop();
+                    double num2 = values.Pop();
+                    return num2 - num1;
+                }
+
+                else return values.Pop() + values.Pop();
+            }
         }
 
         /// <summary>
