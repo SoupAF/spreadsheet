@@ -87,6 +87,8 @@ namespace SpreadsheetUtilities
         public Formula(String formula, Func<string, string> normalize, Func<string, bool> isValid)
         {
 
+            
+
             int openParCount = 0;
             int closeParCount = 0;
 
@@ -107,15 +109,16 @@ namespace SpreadsheetUtilities
                         //Check if a token is a variable
                         char[] chars = tokens.ElementAt(i).ToCharArray();
 
+                       
                         //Check first char
-                        if (!Char.IsLetter(chars[0]) || chars[0] == '_')
-                            throw new ArgumentException("Invalid variable syntax. The first character needs to be a letter or underscore");
+                        if (!Char.IsLetter(chars[0]) && chars[0] != '_')
+                            throw new FormulaFormatException("Invalid variable syntax. The first character needs to be a letter or underscore");
                         //Check the rest
                         for (int t = 1; t < chars.Length; t++)
                         {
-                            if (!Char.IsDigit(chars[t]) && !Char.IsLetter(chars[0]) && chars[0] == '_')
+                            if (!Char.IsDigit(chars[t]) && !Char.IsLetter(chars[0]) && chars[0] != '_')
                             {
-                                throw new ArgumentException("Invalid variable syntax. Only letters, numbers, and underscores are permitted in variable names");
+                                throw new FormulaFormatException("Invalid variable syntax. Only letters, numbers, and underscores are permitted in variable names");
                             }
                         }
 
@@ -146,7 +149,7 @@ namespace SpreadsheetUtilities
 
             //Evaluate resluts for syntactical errors
             //One token rule
-            if (tokens == null)
+            if (formula == "")
                 throw new FormulaFormatException("Your formula cannot be empty");
 
             //Balanced parenthises rule
@@ -158,7 +161,7 @@ namespace SpreadsheetUtilities
                 throw new FormulaFormatException("Your formula cannot begin with any operators that are not (");
 
             //Ending token rule
-            if ((tokens.ElementAt(tokens.Count - 1) != "_" && !Char.IsLetter(tokens.ElementAt(tokens.Count - 1)[0])) && tokens.ElementAt(tokens.Count - 1) != "(" && !double.TryParse(tokens.ElementAt(tokens.Count - 1), out _))
+            if ((tokens.ElementAt(tokens.Count - 1)[0] != '_' && !Char.IsLetter(tokens.ElementAt(tokens.Count - 1)[0])) && tokens.ElementAt(tokens.Count - 1)[0] != ')' && !double.TryParse(tokens.ElementAt(tokens.Count - 1), out _))
                 throw new FormulaFormatException("Your formula cannot end with any operators that are not )");
 
             //Operator following rule and extra following rule
@@ -176,9 +179,7 @@ namespace SpreadsheetUtilities
                         throw new FormulaFormatException("Your formula cannot have two operators or left parenthesis following one another");
                     }
                 }
-                //Make sure there isn't two parenthesis in a row
-                else if(token1 == "(" && token2 == "(")
-                    throw new FormulaFormatException("Your formula cannot have two operators or left parenthesis following one another");
+                
 
                 //Check the other case, if token1 is not one of the above catgories
                 else
@@ -324,12 +325,7 @@ namespace SpreadsheetUtilities
                         //For ) operators
                         else if (op == ')')
                         {
-                            /*
-                            //Check that there is a corrosponding open paranthesis already
-                            closeParCount++;
-                            if (openParCount < closeParCount)
-                                throw new ArgumentException("Invalid formula sytax");
-                            */
+                            
 
                             //Check if stack is empty
                             if (operators.Count != 0)
@@ -367,16 +363,15 @@ namespace SpreadsheetUtilities
                                 {
                                     double num1 = values.Pop();
                                     double num2 = values.Pop();
-                                    if (operators.Peek() == '(')
-                                        operators.Pop();
+                                   
 
                                     op = operators.Pop();
 
                                     if (op == '/')
                                     {
-                                        if (num2 == 0)
+                                        if (num1 == 0)
                                             return new FormulaError("Your formula cannot inculde division by zero");
-                                        values.Push(num1 / num2);
+                                        values.Push(num2 / num1);
                                     }
                                     else
                                     {
@@ -391,23 +386,6 @@ namespace SpreadsheetUtilities
                     //If temp is a variable
                     else
                     {
-                        /*
-                        //Check for valid variabe format
-
-                        char[] chars = temp.ToCharArray();
-
-                        //Check first char
-                        if (!Char.IsLetter(chars[0]))
-                            throw new ArgumentException("Invalid variable syntax");
-                        //Check the rest
-                        for (int t = 1; t < chars.Length; t++)
-                        {
-                            if (!Char.IsDigit(chars[t]))
-                            {
-                                throw new ArgumentException("Invalid variable syntax");
-                            }
-                        }
-                        */
 
                         //Get variable 
                         double n;
@@ -494,7 +472,21 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<String> GetVariables()
         {
-            return null;
+            List<String> vars = new List<string>();
+
+            //Get all variables
+            for(int i = 0; i < tokens.Count; i++)
+            {
+                if(tokens.ElementAt(i)[0] == '_' || Char.IsLetter(tokens.ElementAt(i)[0]))
+                {
+                    //If a token is a variable, and its not already part of vars, add it to vars
+                    if (!vars.Contains(tokens.ElementAt(i)))
+                        vars.Add(tokens.ElementAt(i));
+
+                }
+            }
+
+            return vars;
         }
 
         /// <summary>
@@ -509,7 +501,10 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override string ToString()
         {
-            return null;
+            string result = "";
+            for (int i = 0; i < tokens.Count; i++)
+                result += tokens.ElementAt(i);
+            return result;
         }
 
         /// <summary>
@@ -534,7 +529,30 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override bool Equals(object obj)
         {
-            return false;
+            Formula secForm = (Formula)obj;
+
+            List<string> tokenList1 = tokens;
+            List<string> tokenList2 = secForm.tokens;
+
+            //Check that there are the same number of tokens
+            if (tokenList1.Count != tokenList2.Count)
+                return false;
+
+            //Compare tokens and normalize all numbers in both formulas
+            //It is not neccesary to normalize variable names because they are all normalized in the constructor
+            for(int i = 0; i < tokens.Count; i++)
+            {
+                if (Char.IsDigit(tokens.ElementAt(i)[0]))
+                {
+                    if (Double.Parse(tokens.ElementAt(i)).ToString() != Double.Parse(secForm.tokens.ElementAt(i)).ToString())
+                        return false;
+                }
+
+                else if (tokens.ElementAt(i) != secForm.tokens.ElementAt(i))
+                    return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -544,7 +562,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator ==(Formula f1, Formula f2)
         {
-            return false;
+            return f1.Equals(f2);
         }
 
         /// <summary>
@@ -554,7 +572,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator !=(Formula f1, Formula f2)
         {
-            return false;
+            return !f1.Equals(f2);
         }
 
         /// <summary>
@@ -564,7 +582,18 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override int GetHashCode()
         {
-            return 0;
+            /*To get the hash code, I am adding all values in a formula one after another into a string, and adding the number of tokens in the formula
+            For example, 12+3-x4*12 would have a hashcode of  12319
+            */
+
+            string result = "";
+
+            for(int i = 0; i < tokens.Count; i++)
+            {
+                if (Char.IsDigit(tokens.ElementAt(i)[0]))
+                    result += int.Parse(tokens.ElementAt(i));
+            }
+            return int.Parse(result)+tokens.Count;
         }
 
         /// <summary>
