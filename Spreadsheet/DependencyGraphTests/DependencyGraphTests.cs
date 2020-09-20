@@ -261,5 +261,30 @@ namespace DevelopmentTests
             }
         }
 
+        [TestMethod()]
+        public void testSize()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            Assert.AreEqual(t["a"], 1);
+        }
+
+        [TestMethod()]
+        public void TestHasDependents()
+        {
+            DependencyGraph t = new DependencyGraph();
+            Assert.IsFalse(t.HasDependents("a"));
+            t.AddDependency("a", "b");
+            Assert.IsTrue(t.HasDependents("a"));
+        }
+
+        [TestMethod()]
+        public void TestHasDependees()
+        {
+            DependencyGraph t = new DependencyGraph();
+            Assert.IsFalse(t.HasDependees("b"));
+            t.AddDependency("a", "b");
+            Assert.IsTrue(t.HasDependees("b"));
+        }
     }
 }
