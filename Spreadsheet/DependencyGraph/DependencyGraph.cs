@@ -68,7 +68,7 @@ namespace SpreadsheetUtilities
             dependees = new List<List<string>>();
             dependents = new List<List<string>>();
 
-           
+
 
             dependeeKey = new List<string>();
             dependentKey = new List<string>();
@@ -98,7 +98,7 @@ namespace SpreadsheetUtilities
         public int this[string s]
         {
             //Count dependees for given string s
-            get 
+            get
             {
                 int index = GetDependentKey(s);
                 return dependents[index].Count;
@@ -152,7 +152,7 @@ namespace SpreadsheetUtilities
                 result = dependents[index];
                 return result;
             }
-            
+
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace SpreadsheetUtilities
 
             //Check if s has and depedents
             index = GetDependentKey(s);
-            if(index >= 0)
+            if (index >= 0)
             {
                 //If s has dependents, but not t, add t 
                 if (!dependents[index].Contains(t))
@@ -217,7 +217,7 @@ namespace SpreadsheetUtilities
                         dependees[index].Add(s);
                     }
 
-                    
+
                     size++;
                 }
                 //If t is already present, nothing needs to be done
@@ -247,11 +247,11 @@ namespace SpreadsheetUtilities
                     dependees.Add(new List<string>());
                     dependees[index].Add(s);
                 }
-                
+
             }
 
         }
-        
+
 
 
         /// <summary>
@@ -276,7 +276,7 @@ namespace SpreadsheetUtilities
                     dependees[index].Remove(s);
                 }
             }
-            
+
         }
 
 
@@ -324,6 +324,8 @@ namespace SpreadsheetUtilities
 
 
                 int loc = GetDependeeKey(newDependents.ElementAt<string>(i));
+                dependees.RemoveAt(loc);
+                dependees.Insert(loc, new List<string>());
                 dependees[loc].Add(s);
             }
 
@@ -343,39 +345,41 @@ namespace SpreadsheetUtilities
         {
             //Check that s has dependees
             int index = GetDependeeKey(s);
-            if (index >= 0)
+            if (index < 0)
             {
                 //If not, add s to the dependees lists
                 dependeeKey.Add(s);
                 dependees[GetDependeeKey(s)] = new List<string>();
             }
-            
-                int oldSize = dependees[index].Count;
 
-                //Replace all dependees
-                List<string> oldDependees = dependees[index];
-                dependees[index] = new List<string>(newDependees);
+            int oldSize = dependees[index].Count;
+
+            //Replace all dependees
+            List<string> oldDependees = dependees[index];
+            dependees[index] = new List<string>(newDependees);
 
 
-                //Update dependents list
-                for (int i = 0; i < newDependees.Count(); i++)
-                {
+            //Update dependents list
+            for (int i = 0; i < newDependees.Count(); i++)
+            {
                 //Check that the new dependee is part of the list, and if not add it
-                   if (GetDependentKey(newDependees.ElementAt<string>(i)) < 0)
-                   {
-                       dependentKey.Add(newDependees.ElementAt<string>(i));
-                       dependents.Add(new List<string>());
-                   }
-
-
-                   int loc = GetDependentKey(newDependees.ElementAt<string>(i));
-                   dependents[loc].Add(s);
+                if (GetDependentKey(newDependees.ElementAt<string>(i)) < 0)
+                {
+                    dependentKey.Add(newDependees.ElementAt<string>(i));
+                    dependents.Add(new List<string>());
                 }
 
-                //Update size
-                int sizeChange = oldSize - newDependees.Count();
-                //If the new list is bigger, sizeChange will be negative and result in size increasing. Otherwise, it will shrink
-                size = size - sizeChange;
+
+                int loc = GetDependentKey(newDependees.ElementAt<string>(i));
+                dependents.RemoveAt(loc);
+                dependents.Insert(loc, new List<string>());
+                dependents[loc].Add(s);
+            }
+
+            //Update size
+            int sizeChange = oldSize - newDependees.Count();
+            //If the new list is bigger, sizeChange will be negative and result in size increasing. Otherwise, it will shrink
+            size = size - sizeChange;
 
         }
 
@@ -400,7 +404,7 @@ namespace SpreadsheetUtilities
             return dependentKey.IndexOf(s);
         }
 
-        
+
     }
 
 }

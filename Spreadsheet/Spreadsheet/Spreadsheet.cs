@@ -10,16 +10,41 @@ namespace SS
 {
     public class Spreadsheet : AbstractSpreadsheet
     {
+
+        //Lookup delegate, uses the private helper method GetVarValue defined below
+        public Func<string, double> lookup;
+
         //Dictionary of all named cells in the spreadsheet. There is infinite empty cells, but only named ones are kept track of here
-        private Dictionary<string, Cell> cells = new Dictionary<string, Cell>();
+        private Dictionary<string, Cell> cells;
 
         //Dependency graph for the spredsheet. Accessable only by this class
-        private DependencyGraph Dependencies = new DependencyGraph();
+        private DependencyGraph Dependencies;
 
+
+
+
+        public Spreadsheet()
+        {
+            lookup = GetVarValue;
+            cells = new Dictionary<string, Cell>();
+            Dependencies = new DependencyGraph();
+        }
+        
         public override object GetCellContents(string name)
         {
-            return cells[name].Value;
+            object result; 
+            if (cells[name].Value is SpreadsheetUtilities.Formula)
+            {
+                Formula f1 = (Formula)cells[name].Value;
+                result = f1.Evaluate(lookup);
+            }
+                
+            else result = cells[name].Value;
+
+            return result;
         }
+
+
 
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
@@ -43,16 +68,31 @@ namespace SS
             if (!checkValidity(name))
                 throw new InvalidNameException();
 
-            List<string> result = new List<string>();
 
+            //Get list of cells to update
+            List<string> outdatedCells = new List<string>(GetCellsToRecalculate(name));
 
-            
-            //If the cell has been previously named and given a value, change it and update dependencies
+            //If the cell has been previously named and given a value, change its value and re-calcualte formulas
             if (cells.ContainsKey(name))
             {
                 cells[name].Value = number;
 
-                //TODO: UPDATE CELL DEPENDENCIES
+
+
+                //For each cell in outdatedCells that contains a formuala, update its value. (IN ORDER)
+                foreach (string s in outdatedCells)
+                {
+                    if (cells[s].Value is SpreadsheetUtilities.Formula)
+                    {
+                        //Create a new function with the same value as the one in the cell, evaluate it, and replace it in the cell
+                        Formula f1 = (Formula)cells[s].Value;
+                        f1.Evaluate(lookup);
+                        cells[s].Value = f1;
+                        
+                    }
+                }
+
+                //Cells containing numbers do not depend on other cells, so remove all its dependees if ot has any
 
             }
 
@@ -61,21 +101,118 @@ namespace SS
             {
                 Cell newCell = new Cell(name, number);
                 cells.Add(name, newCell);
+                //No dependencies should exist for a cell with no previous value
+            }
+
+
+            return outdatedCells;
+        }
+
+        public override IList<string> SetCellContents(string name, string text)
+        {
+            //Check validity of the name
+            if (!checkValidity(name))
+                throw new InvalidNameException();
+
+            List<string> result = new List<string>();
+
+
+
+            //If the cell has been previously named and given a value, change it and update dependencies
+            if (cells.ContainsKey(name))
+            {
+                cells[name].Value = text;
+
                 //TODO: UPDATE CELL DEPENDENCIES
+                //Get list of cells to recalculate
+                IEnumerable<string> outdatedCells = GetCellsToRecalculate(name);
+
+                //For each cell in outdatedCells that contains a formuala, update its value. (IN ORDER)
+                foreach (string s in outdatedCells)
+                {
+                    if (cells[s].Value is SpreadsheetUtilities.Formula)
+                    {
+                        //Create a new function with the same value as the one in the cell, evaluate it, and replace it in the cell
+                        Formula f1 = (Formula)cells[s].Value;
+                        f1.Evaluate(lookup);
+                        cells[name].Value = f1;
+                    }
+                }
+            }
+
+            //If the cell has never been used, add it to the cells set, and give it a value
+            else
+            {
+                Cell newCell = new Cell(name, text);
+                cells.Add(name, newCell);
+                //No dependencies should exist for a cell with no previous value
             }
 
 
             return result;
         }
 
-        public override IList<string> SetCellContents(string name, string text)
-        {
-            throw new NotImplementedException();
-        }
-
         public override IList<string> SetCellContents(string name, Formula formula)
         {
-            throw new NotImplementedException();
+
+            //Check validity of the name
+            if (!checkValidity(name))
+                throw new InvalidNameException();
+
+            List<string> result = new List<string>();
+
+
+            //Get a list of all variables the formula references 
+            List<string> vars = new List<string>(formula.GetVariables());
+
+            //Replace old dependees with new ones based on what variables are part of the formula (if it has any)
+            if (Dependencies.HasDependees(name))
+            {
+                Dependencies.ReplaceDependees(name, vars);
+            }
+
+            //Otherwise add the new dependencies
+            else
+            {
+                foreach (string s in vars)
+                {
+                    Dependencies.AddDependency(s, name);
+                }
+            }
+            
+
+            //If the cell has been previously named and given a value, change it and update dependencies
+            if (cells.ContainsKey(name))
+            {
+                cells[name].Value = formula;
+
+                //TODO: UPDATE CELL DEPENDENCIES
+                //Get list of cells to recalculate
+                IEnumerable<string> outdatedCells = GetCellsToRecalculate(name);
+
+                //For each cell in outdatedCells that contains a formuala, update its value. (IN ORDER)
+                foreach (string s in outdatedCells)
+                {
+                    if (cells[s].Value is SpreadsheetUtilities.Formula)
+                    {
+                        //Create a new function with the same value as the one in the cell, evaluate it, and replace it in the cell
+                        Formula f1 = (Formula)cells[s].Value;
+                        f1.Evaluate(lookup);
+                        cells[s].Value = f1;
+                    }
+                }
+            }
+
+            //If the cell has never been used, add it to the cells set, and give it a value
+            else
+            {
+                Cell newCell = new Cell(name, formula);
+                cells.Add(name, newCell);
+                //No dependencies should exist for a cell with no previous value
+            }
+
+
+            return result;
         }
 
 
@@ -115,6 +252,19 @@ namespace SS
             return true;
         }
 
+        /// <summary>
+        /// Lookup function for getting the double value of cells. If the cell does not contain a double, this throws an ArgumentException to be handeled by the formula class
+        /// </summary>
+        /// <param name="name">The name of the variable to lookup</param>
+        /// <returns>The double value of the cell</returns>
+        private double GetVarValue(string name)
+        {
+
+            object result = GetCellContents(name);
+            if (result is double)
+                return (double)result;
+            else throw new ArgumentException();
+        }
 
 
         /// <summary>
@@ -126,27 +276,28 @@ namespace SS
         {
             //Once set, the name of any given cell can never be changed
             private string Name;
+            private object contents;
 
-            
-
-            public Cell(string name, Object value)
+            public Cell(string name, object val)
             {
                 Name = name;
-                Value = value;
-                
+                Value = val;
+
             }
 
 
             /// <summary>
             /// Getter and setter for the value property of a cell. 
             /// </summary>
-            public Object Value
+            public object Value
             {
-                get { return Value; }
-                set { Value = value; }
+                get { return contents; }
+                set { contents = value; }
             }
 
 
         }
+
+
     }
 }

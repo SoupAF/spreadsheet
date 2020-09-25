@@ -8,9 +8,8 @@ namespace SpreadsheetTests
     public class UnitTest1
     {
         [TestMethod]
-        public void TestValidityCheck()
+        public void TestMethod()
         {
-            AbstractSpreadsheet s1 = new Spreadsheet();
             
         }
     }
