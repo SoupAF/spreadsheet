@@ -32,6 +32,15 @@ namespace SS
         
         public override object GetCellContents(string name)
         {
+            //Check if the cell is empty or not
+            if (cells.ContainsKey(name))
+                return cells[name].Value;
+
+            else return "";
+
+            //This code here gets the resulting value of a formula in a cell, but it is not neccessary for PS4. 
+            //I wrote it thinking it was needed right now, but I'm keeping it in case it becomes useful later
+            /*
             object result; 
             if (cells[name].Value is SpreadsheetUtilities.Formula)
             {
@@ -42,13 +51,19 @@ namespace SS
             else result = cells[name].Value;
 
             return result;
+            */
         }
 
 
 
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
-            return cells.Keys;
+            List<string> result = new List<string>();
+            foreach(string s in cells.Keys)
+            {
+                result.Add(s);
+            }
+            return result;
         }
 
 
@@ -114,6 +129,7 @@ namespace SS
             if (!checkValidity(name))
                 throw new InvalidNameException();
 
+
             List<string> result = new List<string>();
 
 
@@ -135,7 +151,7 @@ namespace SS
                         //Create a new function with the same value as the one in the cell, evaluate it, and replace it in the cell
                         Formula f1 = (Formula)cells[s].Value;
                         f1.Evaluate(lookup);
-                        cells[name].Value = f1;
+                        cells[s].Value = f1;
                     }
                 }
             }
@@ -145,7 +161,7 @@ namespace SS
             {
                 Cell newCell = new Cell(name, text);
                 cells.Add(name, newCell);
-                //No dependencies should exist for a cell with no previous value
+                //No dependencies should exist for a cell with no previous value, but the program still needs to check for cicular dependencies
             }
 
 
@@ -164,6 +180,10 @@ namespace SS
 
             //Get a list of all variables the formula references 
             List<string> vars = new List<string>(formula.GetVariables());
+
+            //The Visit() method doesn not check for circular dependencies involving only one cell, so we need to check for that right now
+            if (vars.Contains(name))
+                throw new CircularException();
 
             //Replace old dependees with new ones based on what variables are part of the formula (if it has any)
             if (Dependencies.HasDependees(name))
@@ -208,7 +228,8 @@ namespace SS
             {
                 Cell newCell = new Cell(name, formula);
                 cells.Add(name, newCell);
-                //No dependencies should exist for a cell with no previous value
+                //No dependencies should exist for a cell with no previous value, but we need to check for circular dependencies anyways
+                GetCellsToRecalculate(name);
             }
 
 
@@ -244,7 +265,7 @@ namespace SS
             //Check the rest of the characters
             for (int t = 1; t < chars.Length; t++)
             {
-                if (!Char.IsDigit(chars[t]) && !Char.IsLetter(chars[0]) && chars[0] != '_')
+                if (!Char.IsDigit(chars[t]) && !Char.IsLetter(chars[t]) && chars[t] != '_')
                 {
                     return false;
                 }
@@ -263,9 +284,16 @@ namespace SS
             object result = GetCellContents(name);
             if (result is double)
                 return (double)result;
+            else if(result is SpreadsheetUtilities.Formula)
+            {
+                Formula f1 = (Formula)GetCellContents(name);
+                object val = (double)f1.Evaluate(lookup);
+                if (val is double)
+                    return (double)val;
+                else throw new ArgumentException();
+            }
             else throw new ArgumentException();
         }
-
 
         /// <summary>
         /// Represents a single cell in a spreadsheet
@@ -278,11 +306,20 @@ namespace SS
             private string Name;
             private object contents;
 
-            public Cell(string name, object val)
+            public Cell(string name, string val)
             {
                 Name = name;
                 Value = val;
-
+            }
+            public Cell(string name, double val)
+            {
+                Name = name;
+                Value = val;
+            }
+            public Cell(string name, Formula val)
+            {
+                Name = name;
+                Value = val;
             }
 
 

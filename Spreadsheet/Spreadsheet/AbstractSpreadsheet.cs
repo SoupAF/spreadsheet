@@ -198,8 +198,9 @@ namespace SS
 
         /// <summary>
         /// A helper for the GetCellsToRecalculate method.
-        /// 
-        ///   -- You should fully comment what is going on below --
+        /// Recursivley follows a dependency graph from a given start down to all its dependents, in order
+        /// Each time a cell is visited, it gets added to a result list, and this contiues until it reaches the end of the graph
+        /// It also detects circular dependencies and throws a CircularException when one is found
         /// </summary>
         private void Visit(String start, String name, ISet<String> visited, LinkedList<String> changed)
         {
