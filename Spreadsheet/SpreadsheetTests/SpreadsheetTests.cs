@@ -147,6 +147,7 @@ namespace SpreadsheetTests
             Assert.AreEqual(13.0, s1.GetCellContents("a1"));
         }
 
+        
         [TestMethod]
         public void TestChangingDependenciesString()
         {
@@ -156,6 +157,7 @@ namespace SpreadsheetTests
             s1.SetContentsOfCell("a1", "apple");
             Assert.AreEqual("apple", s1.GetCellContents("a1"));
         }
+        
 
         [TestMethod]
         public void TestChangingDependenciesFormula()
@@ -202,6 +204,7 @@ namespace SpreadsheetTests
         }
 
         [TestMethod]
+        
         public void TestGetCellValue()
         {
             AbstractSpreadsheet s1 = new Spreadsheet();
@@ -217,9 +220,19 @@ namespace SpreadsheetTests
             Assert.AreEqual(107.0, s1.GetCellValue("a4"));
             Assert.AreEqual(218.0, s1.GetCellValue("a5"));
         }
+        
+        [TestMethod]
+        public void TestGetCellValueFormulaError()
+        {
+            Spreadsheet s1 = new Spreadsheet();
+            s1.SetContentsOfCell("a1", "=a4-4");
+         
+            Assert.IsTrue(s1.GetCellValue("a1") is FormulaError);
+
+        }
 
         [TestMethod]
-        public void TestWriteToDisk()
+        public void TestReadAndWrite()
         {
             AbstractSpreadsheet s1 = new Spreadsheet();
             s1.SetContentsOfCell("a1", "124.0");
@@ -230,14 +243,98 @@ namespace SpreadsheetTests
 
             s1.Save("Test.txt");
 
-            Spreadsheet s2 = new Spreadsheet("Test.txt", s => true, s => s, "Copy of s1");
-            s2.Save("result.txt");
+            Assert.AreEqual("default", s1.GetSavedVersion("Test.txt"));
 
+            Spreadsheet s2 = new Spreadsheet("Test.txt", s => true, s => s, "Copy of s1");
+
+            Assert.AreEqual(124.0, s2.GetCellValue("a1"));
+            Assert.AreEqual(111.0, s2.GetCellValue("a2"));
+            Assert.AreEqual("potato", s2.GetCellValue("a3"));
+            Assert.AreEqual(107.0, s2.GetCellValue("a4"));
+            Assert.AreEqual(218.0, s2.GetCellValue("a5"));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void TestBadFilePath()
+        {
+            Spreadsheet s1 = new Spreadsheet();
+            s1.SetContentsOfCell("a1", "1");
+
+            s1.Save("/garbunkclemcdunkus/jingle/jankus/bad.txt");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void TestSaveEmptySpreadsheet()
+        {
+            Spreadsheet s1 = new Spreadsheet();
+            s1.Save("save.txt");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void TestReadBadFile()
+        {
+            Spreadsheet s1 = new Spreadsheet("doesntexist.txt", s => true, s => s, "bad");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void TestGetBadVersion()
+        {
+            Spreadsheet s1 = new Spreadsheet();
+            s1.GetSavedVersion("doesntexist.txt");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidNameException))]
+        public void TestValidator()
+        {
+            Spreadsheet s1 = new Spreadsheet(s => false, s => s, "test");
+            s1.SetContentsOfCell("a1", "rejected");
+        }
+
+        [TestMethod]
+        public void TestNormalizer()
+        {
+            Spreadsheet s1 = new Spreadsheet(s => true, ExampleNormalizer, "test");
+            s1.SetContentsOfCell("a1", "test");
+            Assert.AreEqual("test", s1.GetCellValue("A1"));
+        }
+
+        [TestMethod]
+        public void TestNormalizerAndValidator()
+        {
+            Spreadsheet s1 = new Spreadsheet(ExampleValidator, ExampleNormalizer, "test");
+            s1.SetContentsOfCell("a1", "asdfaf");
+            Assert.AreEqual("asdfaf", s1.GetCellValue("a1"));
+        }
+
+        [TestMethod]
+        public void TestChangedField()
+        {
+            Spreadsheet s1 = new Spreadsheet();
+            s1.SetContentsOfCell("a1", "asdfadf");
+            Assert.IsTrue(s1.Changed);
+
+            s1.Save("save.txt");
+            Assert.IsFalse(s1.Changed);
         }
 
 
 
+        public string ExampleNormalizer(string input)
+        {
+            return input.ToUpper();
+        }
 
+        public bool ExampleValidator(string input)
+        {
+            if (!input.StartsWith("A"))
+                return false;
+            else return true;
+        }
 
 
 

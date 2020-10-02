@@ -2,6 +2,7 @@
 using SS;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -94,7 +95,7 @@ namespace SS
                     }
                 }
             }
-            catch (DirectoryNotFoundException)
+            catch (FileNotFoundException)
             {
                 throw new SpreadsheetReadWriteException("The specified filename/path could not be found. Please ensure it is correct");
             }
@@ -112,6 +113,9 @@ namespace SS
 
         public override object GetCellContents(string name)
         {
+            //Normalize the name first
+            name = Normalize(name);
+
             //Check if the cell is empty or not
             if (cells.ContainsKey(name))
                 return cells[name].Value;
@@ -414,7 +418,7 @@ namespace SS
                     else throw new SpreadsheetReadWriteException("The specified file is not in the correct format, or may be corrupted. Please try again");
                 }
             }
-            catch (DirectoryNotFoundException)
+            catch (FileNotFoundException)
             {
                 throw new SpreadsheetReadWriteException("The specified file could not be found. Please ensure it was entered correctly and that the file exists");
             }
@@ -507,6 +511,9 @@ namespace SS
         public override object GetCellValue(string name)
         {
 
+            //Normalize the name first
+            name = Normalize(name);
+
             object result;
 
             //If the value of the cell is a formula, evaluate it and get its value
@@ -536,6 +543,8 @@ namespace SS
             //Once set, the name of any given cell can never be changed
             private string name;
             private object contents;
+
+            
 
 
             public Cell(string name, string val)
@@ -570,6 +579,7 @@ namespace SS
                 private set { name = value; }
             }
 
+            
 
         }
 
