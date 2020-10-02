@@ -229,6 +229,10 @@ namespace SpreadsheetTests
             s1.SetContentsOfCell("a5", "=a4+a2");
 
             s1.Save("Test.txt");
+
+            Spreadsheet s2 = new Spreadsheet("Test.txt", s => true, s => s, "Copy of s1");
+            s2.Save("result.txt");
+
         }
 
 

@@ -2,6 +2,7 @@
 using SS;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -44,9 +45,68 @@ namespace SS
 
         }
 
-        public Spreadsheet(string filePath, Func<string, bool> isValid, Func<string, string> normalize, string version) : base(isValid, normalize, version)
+        public Spreadsheet(string filename, Func<string, bool> isValid, Func<string, string> normalize, string version) : base(isValid, normalize, version)
         {
+            lookup = GetVarValue;
+            cells = new Dictionary<string, Cell>();
+            Dependencies = new DependencyGraph();
             Changed = false;
+            Version = version;
+
+            //Attempt to read the spreadsheet from the file. If there are isues, throw an exception
+            try
+            {
+                using (XmlReader reader = XmlReader.Create(filename))
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.IsStartElement())
+                        {
+                            switch (reader.Name)
+                            {
+                                //If spreadsheet or cells was read, they are just used for structuring the file, no action is needed
+                                case "spreadsheet":
+                                    break;
+
+                                case "cells":
+                                    break;
+
+                                //If cell was read, then we need to add that cell to the new spreadsheet
+                                //NOTE: all of the "reader.Read()" lines are to advance the reader past indentation and the ends of elements that we want to skip over
+                                case "cell":
+                                    reader.Read();
+                                    reader.Read();
+                                    reader.Read();
+                                    string cellName = reader.Value;
+                                    reader.Read();
+                                    reader.Read();
+                                    reader.Read();
+                                    reader.Read();
+                                    string cellVal = reader.Value;
+                                    reader.Read();
+                                    reader.Read();
+                                    reader.Read();
+                                    this.SetContentsOfCell(cellName, cellVal);
+                                    break;
+                            }
+                        }
+                        //If the read element isnt a start element, it should be the end of the cells block, and we don't need to continue reading the file
+                    }
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                throw new SpreadsheetReadWriteException("The specified filename/path could not be found. Please ensure it is correct");
+            }
+
+
+
+
+
+
+
+
+
             //TODO load spreadsheet from a file and make a new spreadsheet using that
         }
 
@@ -58,7 +118,7 @@ namespace SS
 
             else return "";
 
-            
+
         }
 
 
@@ -66,7 +126,7 @@ namespace SS
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
             List<string> result = new List<string>();
-            foreach(string s in cells.Keys)
+            foreach (string s in cells.Keys)
             {
                 result.Add(s);
             }
@@ -76,6 +136,9 @@ namespace SS
 
         public override IList<String> SetContentsOfCell(String name, String content)
         {
+            //Normalize the cell name
+            name = Normalize(name);
+
             //Check validity of the name
             if (!checkValidity(name))
                 throw new InvalidNameException();
@@ -115,7 +178,7 @@ namespace SS
         /// </summary>
         protected override IList<string> SetCellContents(string name, double number)
         {
-            
+
 
 
             //Get list of cells to update
@@ -137,7 +200,7 @@ namespace SS
                         Formula f1 = (Formula)cells[s].Value;
                         f1.Evaluate(lookup);
                         cells[s].Value = f1;
-                        
+
                     }
                 }
 
@@ -160,7 +223,7 @@ namespace SS
 
         protected override IList<string> SetCellContents(string name, string text)
         {
-           
+
 
 
             List<string> result = new List<string>();
@@ -205,7 +268,7 @@ namespace SS
         protected override IList<string> SetCellContents(string name, Formula formula)
         {
 
-           
+
 
             List<string> result = new List<string>();
 
@@ -231,7 +294,7 @@ namespace SS
                     Dependencies.AddDependency(s, name);
                 }
             }
-            
+
 
             //If the cell has been previously named and given a value, change it and update dependencies
             if (cells.ContainsKey(name))
@@ -323,7 +386,7 @@ namespace SS
             object result = GetCellContents(name);
             if (result is double)
                 return (double)result;
-            else if(result is SpreadsheetUtilities.Formula)
+            else if (result is SpreadsheetUtilities.Formula)
             {
                 Formula f1 = (Formula)GetCellContents(name);
                 object val = (double)f1.Evaluate(lookup);
@@ -336,7 +399,25 @@ namespace SS
 
         public override string GetSavedVersion(string filename)
         {
-            throw new NotImplementedException();
+            //Attempt to start reading the file. If it doesn't work, throw an exception
+            try
+            {
+                using (XmlReader reader = XmlReader.Create(filename))
+                {
+                    //read the version attribute of spreadsheet. If the spreadsheet file is in the wrong format, this will throw an exception
+                    if (reader.IsStartElement())
+                    {
+                        if (reader.Name == "spreadsheet")
+                            return reader["version"];
+                        else throw new SpreadsheetReadWriteException("The specified file is not in the correct format, or may be corrupted. Please try again");
+                    }
+                    else throw new SpreadsheetReadWriteException("The specified file is not in the correct format, or may be corrupted. Please try again");
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                throw new SpreadsheetReadWriteException("The specified file could not be found. Please ensure it was entered correctly and that the file exists");
+            }
         }
 
 
@@ -373,49 +454,59 @@ namespace SS
             settings.Indent = true;
             settings.IndentChars = "   ";
 
-
-            using (XmlWriter writer = XmlWriter.Create(filename, settings))
+            //Attempt to write the file. If the filename/path is incorrect for any reason, throw an exception
+            try
             {
-                writer.WriteStartDocument();
-                writer.WriteStartElement("spreadsheet");
-                writer.WriteAttributeString("version", Version);
-
-                writer.WriteStartElement("cells");
-
-                //Write all cells
-                foreach (Cell c in cells.Values)
+                using (XmlWriter writer = XmlWriter.Create(filename, settings))
                 {
-                    writer.WriteStartElement("cell");
-                    writer.WriteElementString("name", c.Name);
+                    //Write the start of the document and version info
+                    writer.WriteStartDocument();
+                    writer.WriteStartElement("spreadsheet");
+                    writer.WriteAttributeString("version", Version);
 
-                    //If the content of a cell is a formula, it needs to have "=" appended
-                    if(c.Value is SpreadsheetUtilities.Formula)
+                    //Start the cells section
+                    writer.WriteStartElement("cells");
+
+                    //Write all cells
+                    foreach (Cell c in cells.Values)
                     {
-                        string formula = "=" + c.Value.ToString();
-                        writer.WriteElementString("contents", formula);
+                        writer.WriteStartElement("cell");
+                        writer.WriteElementString("name", c.Name);
+
+                        //If the content of a cell is a formula, it needs to have "=" appended
+                        if (c.Value is SpreadsheetUtilities.Formula)
+                        {
+                            string formula = "=" + c.Value.ToString();
+                            writer.WriteElementString("contents", formula);
+                        }
+                        //Otherwise just write the contents as a string
+                        else writer.WriteElementString("contents", c.Value.ToString());
+
+                        writer.WriteEndElement();
                     }
-                    //Otherwise just write the contents as a string
-                    else writer.WriteElementString("contents", c.Value.ToString());
 
+                    //End Cells block
                     writer.WriteEndElement();
+                    //End spreadsheet block
+                    writer.WriteEndElement();
+                    writer.WriteEndDocument();
+
+
                 }
-
-                //End Cells block
-                writer.WriteEndElement();
-                //End spreadsheet block
-                writer.WriteEndElement();
-                writer.WriteEndDocument();
-                
-
+            }
+            catch (DirectoryNotFoundException)
+            {
+                throw new SpreadsheetReadWriteException("Filename or path is invalid! Please make sure your specified filename/path is correct");
             }
 
+            //Reset the Changed attribute, as all changes are now saved
             Changed = false;
-            
+
         }
 
         public override object GetCellValue(string name)
         {
-            
+
             object result;
 
             //If the value of the cell is a formula, evaluate it and get its value
@@ -429,7 +520,7 @@ namespace SS
             else result = cells[name].Value;
 
             return result;
-            
+
         }
 
 
