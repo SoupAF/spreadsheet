@@ -516,6 +516,9 @@ namespace SS
 
             object result;
 
+            if (!cells.ContainsKey(name))
+                return "";
+
             //If the value of the cell is a formula, evaluate it and get its value
             if (cells[name].Value is SpreadsheetUtilities.Formula)
             {

@@ -393,7 +393,9 @@ namespace SpreadsheetUtilities
                         {
                             n = lookup(temp);
                         }
+#pragma warning disable CS0168 // Variable is declared but never used
                         catch (ArgumentException e)
+#pragma warning restore CS0168 // Variable is declared but never used
                         {
                             return new FormulaError("Your variable could not be found. Please check that your variable is defined and spelled correctly");
                         }
@@ -501,7 +503,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override string ToString()
         {
-            string result = "";
+            string result = "=";
             for (int i = 0; i < tokens.Count; i++)
                 result += tokens.ElementAt(i);
             return result;
