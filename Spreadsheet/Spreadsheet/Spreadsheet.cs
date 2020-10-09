@@ -51,7 +51,7 @@ namespace SS
             lookup = GetVarValue;
             cells = new Dictionary<string, Cell>();
             Dependencies = new DependencyGraph();
-            Changed = false;
+            
             Version = version;
 
             //Attempt to read the spreadsheet from the file. If there are isues, throw an exception
@@ -100,15 +100,9 @@ namespace SS
                 throw new SpreadsheetReadWriteException("The specified filename/path could not be found. Please ensure it is correct");
             }
 
+            Changed = false;
 
 
-
-
-
-
-
-
-            //TODO load spreadsheet from a file and make a new spreadsheet using that
         }
 
         public override object GetCellContents(string name)
@@ -230,7 +224,7 @@ namespace SS
 
 
 
-            List<string> result = new List<string>();
+            List<string> result = new List<string>(GetCellsToRecalculate(name));
 
 
 
@@ -393,7 +387,7 @@ namespace SS
             else if (result is SpreadsheetUtilities.Formula)
             {
                 Formula f1 = (Formula)GetCellContents(name);
-                object val = (double)f1.Evaluate(lookup);
+                object val = f1.Evaluate(lookup);
                 if (val is double)
                     return (double)val;
                 else throw new ArgumentException();

@@ -51,6 +51,7 @@
             this.yes.TabIndex = 1;
             this.yes.Text = "Yes";
             this.yes.UseVisualStyleBackColor = true;
+            this.yes.Click += new System.EventHandler(this.yes_Click);
             // 
             // no
             // 
@@ -60,6 +61,7 @@
             this.no.TabIndex = 2;
             this.no.Text = "No";
             this.no.UseVisualStyleBackColor = true;
+            this.no.Click += new System.EventHandler(this.no_Click);
             // 
             // closeCheck
             // 
@@ -71,7 +73,6 @@
             this.Controls.Add(this.label1);
             this.Name = "closeCheck";
             this.Text = "Are You Sure?";
-            this.Load += new System.EventHandler(this.closeCheck_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

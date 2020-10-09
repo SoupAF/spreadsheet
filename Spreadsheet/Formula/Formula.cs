@@ -112,13 +112,13 @@ namespace SpreadsheetUtilities
                        
                         //Check first char
                         if (!Char.IsLetter(chars[0]) && chars[0] != '_')
-                            throw new FormulaFormatException("Invalid variable syntax. The first character needs to be a letter or underscore");
+                            throw new FormulaFormatException("Invalid variable syntax. The first character needs to be a letter");
                         //Check the rest
                         for (int t = 1; t < chars.Length; t++)
                         {
                             if (!Char.IsDigit(chars[t]) && !Char.IsLetter(chars[0]) && chars[0] != '_')
                             {
-                                throw new FormulaFormatException("Invalid variable syntax. Only letters, numbers, and underscores are permitted in variable names");
+                                throw new FormulaFormatException("Invalid variable syntax. Only letters and numbers are permitted in variable names");
                             }
                         }
 

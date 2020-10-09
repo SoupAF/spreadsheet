@@ -13,24 +13,32 @@ namespace SpreadsheetGUI
 
 
     public delegate void CloseForm();
-    public delegate void DontCloseForm();
+   
         
 
     public partial class closeCheck : Form
     {
         public event CloseForm closeForm;
-        public event DontCloseForm dontCloseForm;
+       
 
 
         public closeCheck()
         {
             InitializeComponent();
+            spreadWindow mainWindow = (spreadWindow)spreadWindow.ActiveForm;
+            closeForm += mainWindow.control.CloseProgram;
             
+            this.StartPosition = FormStartPosition.CenterParent;
         }
 
-        private void closeCheck_Load(object sender, EventArgs e)
+        private void yes_Click(object sender, EventArgs e)
         {
+            closeForm();
+        }
 
+        private void no_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }
