@@ -151,7 +151,7 @@ namespace SS
                 return SetCellContents(name, result);
             }
 
-            //Check if content is a double
+            //Check if content is a formula
             if (content.StartsWith("="))
             {
                 //remove the "=" and create a new formula
@@ -474,7 +474,7 @@ namespace SS
                         //If the content of a cell is a formula, it needs to have "=" appended
                         if (c.Value is SpreadsheetUtilities.Formula)
                         {
-                            string formula = "=" + c.Value.ToString();
+                            string formula = c.Value.ToString();
                             writer.WriteElementString("contents", formula);
                         }
                         //Otherwise just write the contents as a string

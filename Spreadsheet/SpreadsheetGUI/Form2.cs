@@ -19,8 +19,6 @@ namespace SpreadsheetGUI
     public partial class closeCheck : Form
     {
         public event CloseForm closeForm;
-       
-
 
         public closeCheck()
         {
@@ -28,16 +26,18 @@ namespace SpreadsheetGUI
             spreadWindow mainWindow = (spreadWindow)spreadWindow.ActiveForm;
             closeForm += mainWindow.control.CloseProgram;
             
-            this.StartPosition = FormStartPosition.CenterParent;
         }
+
 
         private void yes_Click(object sender, EventArgs e)
         {
+            //If the "yes" button was clicked, close the entire program by triggering the colseForm event
             closeForm();
         }
 
         private void no_Click(object sender, EventArgs e)
         {
+            //If "no" was clicked, close this form
             this.Close();
         }
     }

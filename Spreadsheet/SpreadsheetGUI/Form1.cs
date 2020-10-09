@@ -26,10 +26,11 @@ namespace SpreadsheetGUI
     public delegate void NewSpreadsheet();
     public delegate void SaveSpreadsheet(string filename);
     public delegate void OpenSpreadsheet(string filename);
+    public delegate void OpenFormulaWizard();
 
     public partial class spreadWindow : Form
     {
-        //public event ValChanged cellValChanged;
+        //Events for the program
         public event FormClosing tryCloseForm;
         public event SelectionChanged selectionchanged;
         public event KeyPressed keyPressed;
@@ -37,6 +38,7 @@ namespace SpreadsheetGUI
         public event NewSpreadsheet newSpreadsheet;
         public event SaveSpreadsheet saveSpreadsheet;
         public event OpenSpreadsheet openSpreadsheet;
+        public event OpenFormulaWizard openWizard;
 
         public Controller control;
 
@@ -45,9 +47,14 @@ namespace SpreadsheetGUI
             InitializeComponent();
             this.Show();
             control = new Controller();
-             SaveSpreadsheet = new SaveFileDialog();
+            SaveSpreadsheet = new SaveFileDialog();
 
+            //Set the default selcted cell
+            mainPanel.SetSelection(0, 0);
+            //Give focus to the content box
+            contentBox.Focus();
 
+            //Register all events to their handlers
             selectionchanged += control.SelectionChangedHandler;
             keyPressed += control.KeyPressedHandler;
             tryCloseForm += control.ClosePressedHandler;
@@ -55,6 +62,9 @@ namespace SpreadsheetGUI
             newSpreadsheet += control.NewSpreadsheetHandler;
             saveSpreadsheet += control.SaveSpreadsheetHandler;
             openSpreadsheet += control.OpenSpreadsheetHandler;
+            openWizard += control.OpenWizard;
+
+            
 
         }
 
@@ -69,7 +79,6 @@ namespace SpreadsheetGUI
         {
             //Trigger the KeyPressed Event
             keyPressed(e);
-           // e.Handled = true;
         }
 
         private void contentBox_Enter(object sender, EventArgs e)
@@ -81,11 +90,13 @@ namespace SpreadsheetGUI
 
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            //Close the window. This will trigger the FormClosing event below
             this.Close();
         }
 
         private void contentBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
+            //If an arrow key is pressed, trigger the arrowPresed event and the selectionChanged event
             if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down || e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
             {
                 arrowPressed(e);
@@ -95,11 +106,13 @@ namespace SpreadsheetGUI
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            //Trigger the newSpreadsheet event when the New buton is clicked
             newSpreadsheet();
         }
 
         private void spreadWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
+            //If the user attempts to close the window, trigger the tryCloseForm event to see if changes need to be saved
             e.Cancel = tryCloseForm(e);
         }
 
@@ -126,30 +139,39 @@ namespace SpreadsheetGUI
 
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            //Open the help window
             HelpForm help = new HelpForm();
             help.Show();
+        }
+
+        private void formulaWizardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //Open the formula wizard window
+            openWizard();
         }
     }
 
 
 
     /// <summary>
-    /// Clas responsible for interfacing with the model (spreadsheet) and the GUI
+    /// Class responsible for interfacing with the model (spreadsheet) and the GUI
     /// </summary>
     public class Controller
     {
-
-
-
         //The spreadsheet that will hold the form's data
         public Spreadsheet spreadsheet;
+
+        //Used for keeping track of the various windows that may open
         private spreadWindow mainWindow;
         private closeCheck closeCheckWindow;
+        public FormulaWizard wizard;
+
+
         public Controller()
         {
             //Create a new spreadsheet with the validator method below, and a default noramalizer that changes all cell names to lowercase
             spreadsheet = new Spreadsheet(Validator, s => s.ToLower(), "ps6");
-            //Get the current 
+            //Get the current spreadsheet window
             mainWindow = (spreadWindow)spreadWindow.ActiveForm;
 
 
@@ -177,7 +199,7 @@ namespace SpreadsheetGUI
             //If an enter key was pressed, update the value of the selected cell
             if (e.KeyChar == '\r')
             {
-                //Trigger the cellValChanged event and update dependent cells
+                //Change the value of the cell and update dependent cells
                 string cellName = GetCellName(col, row);
                 UpdateDependentCells(ChangeCellVal(cellName, mainWindow.contentBox.Text));
                 //Display the cell's value
@@ -187,6 +209,20 @@ namespace SpreadsheetGUI
 
         }
 
+        public void FormulaInsertHander(string cellname, string content)
+        {
+            //Update cells dependent on the inserted formula
+            UpdateDependentCells(ChangeCellVal(cellname, content));
+
+            //Display the cell's new value
+            int col;
+            int row;
+            double coords = GetCellCoords(cellname);
+            col = (int)coords;
+            row = (int)((coords - col) * 100);
+            mainWindow.mainPanel.SetValue(col, row, GetCellValue(GetCellName(col, row)));
+            mainWindow.valBox.Text = GetCellValue(cellname);
+        }
 
         public bool ClosePressedHandler(FormClosingEventArgs e)
         {
@@ -199,6 +235,9 @@ namespace SpreadsheetGUI
             else
             {
                 closeCheckWindow = new closeCheck();
+                closeCheckWindow.StartPosition = FormStartPosition.Manual;
+                Point closeCheckLoc = mainWindow.PointToScreen(new Point(0, 0));
+                closeCheckWindow.Location = closeCheckLoc;
                 closeCheckWindow.Show();
                 return true;
             }
@@ -212,7 +251,7 @@ namespace SpreadsheetGUI
             closeCheckWindow.Close();
         }
 
-        
+
 
         public void ArrowPressedHandler(PreviewKeyDownEventArgs e)
         {
@@ -255,8 +294,22 @@ namespace SpreadsheetGUI
         {
             //If the user selected a valid file to open, replace the current spreadsheet with the one loaded from file
             spreadsheet = new Spreadsheet(filename, Validator, s => s.ToLower(), "ps6");
-            //Update all cells that contain data in the main window to reflect their values
+            //Update the spreadsheet panel to display the values of the new cells
             UpdateDependentCells(new List<string>(spreadsheet.GetNamesOfAllNonemptyCells()));
+        }
+
+        public void OpenWizard()
+        {
+            //Create a new Formula wizard window
+            wizard = new FormulaWizard();
+
+            //Postion the wizard window next to the main one
+            Point wizPoint = new Point(mainWindow.Right-101, mainWindow.Top-105);
+            Point wizLoc = mainWindow.PointToScreen(wizPoint);
+            wizard.StartPosition = FormStartPosition.Manual;
+            wizard.Location = wizLoc;
+
+            wizard.Show();
         }
 
 
@@ -264,10 +317,11 @@ namespace SpreadsheetGUI
 
 
 
+        //Helper methods used by this and other controller classes
 
-
-        //Helper methods
-
+        /// <summary>
+        /// Change the value of a cell in the main spreadsheet window
+        /// </summary>
         private List<string> ChangeCellVal(string cellName, string cellContent)
         {
             //Attempt to change the value of the cell specified, and update the cell's value
@@ -275,6 +329,8 @@ namespace SpreadsheetGUI
             {
                 return new List<string>(spreadsheet.SetContentsOfCell(cellName, cellContent));
             }
+            //If the formula is an invalid formula, catch the exception and display the error message to the user
+            //NOTE: If the user enters an invalid formula, the formula will not be added into the cell 
             catch (FormulaFormatException e)
             {
                 mainWindow.outputBox.Text = e.Message;
@@ -283,8 +339,10 @@ namespace SpreadsheetGUI
             }
         }
 
-        //Gets the value of a given cell as a string
-        private string GetCellValue(string cellName)
+        /// <summary>
+        /// Returns the value of the cell named cellName. Returns "Invalid!" if the value is a FormulaError
+        /// </summary>
+        public string GetCellValue(string cellName)
         {
             //If there is a formula error, display Invalid! Otherwise, display the cells value
             object obj = spreadsheet.GetCellValue(cellName);
@@ -293,7 +351,9 @@ namespace SpreadsheetGUI
             else return obj.ToString();
         }
 
-        //Gets the contents of a cell
+        /// <summary>
+        /// Returns the contents of a cell in string form
+        /// </summary>
         private string GetCellContents(string cellName)
         {
             return spreadsheet.GetCellContents(cellName).ToString();
@@ -319,7 +379,7 @@ namespace SpreadsheetGUI
         /// <summary>
         /// Takes an input of a row and a column, and returns the cell at that location's name
         /// </summary>
-        private string GetCellName(int col, int row)
+        public string GetCellName(int col, int row)
         {
             //Get the collumn name
             string letters = "abcdefghijklmnopqrstuvwxyz";
@@ -355,6 +415,7 @@ namespace SpreadsheetGUI
         /// </summary>
         private double GetCellCoords(string cellName)
         {
+            cellName = cellName.ToLower();
             string letters = "abcdefghijklmnopqrstuvwxyz";
             double result = letters.IndexOf(cellName.Substring(0, 1));
             result += (double.Parse(cellName.Substring(1)) - 1) / 100;

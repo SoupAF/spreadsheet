@@ -42,11 +42,10 @@
             this.saveToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.formulaWizardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.SaveSpreadsheet = new System.Windows.Forms.SaveFileDialog();
             this.OpenSpreadsheet = new System.Windows.Forms.OpenFileDialog();
             this.outputBox = new System.Windows.Forms.TextBox();
+            this.formulaWizardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -121,7 +120,7 @@
             this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.helpToolStripMenuItem,
-            this.toolsToolStripMenuItem});
+            this.formulaWizardToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Size = new System.Drawing.Size(978, 24);
@@ -142,28 +141,28 @@
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.saveToolStripMenuItem.Text = "New";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem1
             // 
             this.saveToolStripMenuItem1.Name = "saveToolStripMenuItem1";
-            this.saveToolStripMenuItem1.Size = new System.Drawing.Size(103, 22);
+            this.saveToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
             this.saveToolStripMenuItem1.Text = "Save";
             this.saveToolStripMenuItem1.Click += new System.EventHandler(this.saveToolStripMenuItem1_Click);
             // 
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.closeToolStripMenuItem.Text = "Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
@@ -174,20 +173,6 @@
             this.helpToolStripMenuItem.Text = "Help";
             this.helpToolStripMenuItem.Click += new System.EventHandler(this.helpToolStripMenuItem_Click);
             // 
-            // toolsToolStripMenuItem
-            // 
-            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.formulaWizardToolStripMenuItem});
-            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(47, 20);
-            this.toolsToolStripMenuItem.Text = "Tools";
-            // 
-            // formulaWizardToolStripMenuItem
-            // 
-            this.formulaWizardToolStripMenuItem.Name = "formulaWizardToolStripMenuItem";
-            this.formulaWizardToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
-            this.formulaWizardToolStripMenuItem.Text = "Formula Wizard";
-            // 
             // outputBox
             // 
             this.outputBox.Enabled = false;
@@ -195,6 +180,13 @@
             this.outputBox.Name = "outputBox";
             this.outputBox.Size = new System.Drawing.Size(961, 20);
             this.outputBox.TabIndex = 8;
+            // 
+            // formulaWizardToolStripMenuItem
+            // 
+            this.formulaWizardToolStripMenuItem.Name = "formulaWizardToolStripMenuItem";
+            this.formulaWizardToolStripMenuItem.Size = new System.Drawing.Size(102, 20);
+            this.formulaWizardToolStripMenuItem.Text = "Formula Wizard";
+            this.formulaWizardToolStripMenuItem.Click += new System.EventHandler(this.formulaWizardToolStripMenuItem_Click);
             // 
             // spreadWindow
             // 
@@ -237,11 +229,10 @@
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem formulaWizardToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog SaveSpreadsheet;
         private System.Windows.Forms.OpenFileDialog OpenSpreadsheet;
         public System.Windows.Forms.TextBox outputBox;
+        private System.Windows.Forms.ToolStripMenuItem formulaWizardToolStripMenuItem;
     }
 }
 

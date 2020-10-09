@@ -33,13 +33,17 @@
             this.layoutButton = new System.Windows.Forms.Button();
             this.fileButton = new System.Windows.Forms.Button();
             this.navButton = new System.Windows.Forms.Button();
+            this.datButton = new System.Windows.Forms.Button();
+            this.wizardButon = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // infoBox
             // 
-            this.infoBox.Location = new System.Drawing.Point(1, 97);
+            this.infoBox.Enabled = false;
+            this.infoBox.Location = new System.Drawing.Point(1, 102);
             this.infoBox.Name = "infoBox";
-            this.infoBox.Size = new System.Drawing.Size(597, 356);
+            this.infoBox.ReadOnly = true;
+            this.infoBox.Size = new System.Drawing.Size(597, 351);
             this.infoBox.TabIndex = 0;
             this.infoBox.Text = "";
             // 
@@ -54,7 +58,7 @@
             // 
             // layoutButton
             // 
-            this.layoutButton.Location = new System.Drawing.Point(79, 43);
+            this.layoutButton.Location = new System.Drawing.Point(24, 43);
             this.layoutButton.Name = "layoutButton";
             this.layoutButton.Size = new System.Drawing.Size(75, 23);
             this.layoutButton.TabIndex = 2;
@@ -64,7 +68,7 @@
             // 
             // fileButton
             // 
-            this.fileButton.Location = new System.Drawing.Point(234, 43);
+            this.fileButton.Location = new System.Drawing.Point(307, 43);
             this.fileButton.Name = "fileButton";
             this.fileButton.Size = new System.Drawing.Size(123, 23);
             this.fileButton.TabIndex = 3;
@@ -74,7 +78,7 @@
             // 
             // navButton
             // 
-            this.navButton.Location = new System.Drawing.Point(444, 43);
+            this.navButton.Location = new System.Drawing.Point(120, 43);
             this.navButton.Name = "navButton";
             this.navButton.Size = new System.Drawing.Size(75, 23);
             this.navButton.TabIndex = 4;
@@ -82,18 +86,40 @@
             this.navButton.UseVisualStyleBackColor = true;
             this.navButton.Click += new System.EventHandler(this.navButton_Click);
             // 
+            // datButton
+            // 
+            this.datButton.Location = new System.Drawing.Point(212, 43);
+            this.datButton.Name = "datButton";
+            this.datButton.Size = new System.Drawing.Size(75, 23);
+            this.datButton.TabIndex = 5;
+            this.datButton.Text = "Data Entry";
+            this.datButton.UseVisualStyleBackColor = true;
+            this.datButton.Click += new System.EventHandler(this.datButton_Click);
+            // 
+            // wizardButon
+            // 
+            this.wizardButon.Location = new System.Drawing.Point(455, 43);
+            this.wizardButon.Name = "wizardButon";
+            this.wizardButon.Size = new System.Drawing.Size(97, 23);
+            this.wizardButon.TabIndex = 6;
+            this.wizardButon.Text = "Formula Wizard";
+            this.wizardButon.UseVisualStyleBackColor = true;
+            this.wizardButon.Click += new System.EventHandler(this.wizardButon_Click);
+            // 
             // HelpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(598, 450);
+            this.Controls.Add(this.wizardButon);
+            this.Controls.Add(this.datButton);
             this.Controls.Add(this.navButton);
             this.Controls.Add(this.fileButton);
             this.Controls.Add(this.layoutButton);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.infoBox);
             this.Name = "HelpForm";
-            this.Text = "HelpForm";
+            this.Text = "Help";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -106,5 +132,7 @@
         private System.Windows.Forms.Button layoutButton;
         private System.Windows.Forms.Button fileButton;
         private System.Windows.Forms.Button navButton;
+        private System.Windows.Forms.Button datButton;
+        private System.Windows.Forms.Button wizardButon;
     }
 }
