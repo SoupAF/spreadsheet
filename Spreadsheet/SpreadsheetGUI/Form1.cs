@@ -302,13 +302,6 @@ namespace SpreadsheetGUI
         {
             //Create a new Formula wizard window
             wizard = new FormulaWizard();
-
-            //Postion the wizard window next to the main one
-            Point wizPoint = new Point(mainWindow.Right-101, mainWindow.Top-105);
-            Point wizLoc = mainWindow.PointToScreen(wizPoint);
-            wizard.StartPosition = FormStartPosition.Manual;
-            wizard.Location = wizLoc;
-
             wizard.Show();
         }
 

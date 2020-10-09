@@ -52,16 +52,6 @@ The formula wizard can be opened on the second window as long as there is not an
 
 
 
-
-
-
-
-
-
-
-
-
-
 External Code Resources:
 https://stackoverflow.com/questions/37436026/c-sharp-allow-switching-of-input-fields-using-arrow-keys - Used to detect arrow key input
 https://stackoverflow.com/questions/6082535/open-new-instance-of-c-sharp-windows-application - Used to open a new instance of the current application
