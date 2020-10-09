@@ -18,6 +18,7 @@ namespace SpreadsheetGUI
     public delegate void Backspace();
     public delegate void AddVar();
     public delegate void InsertButton(string cellname);
+    public delegate void TargetChanged();
 
     public partial class FormulaWizard : Form
     {
@@ -29,15 +30,14 @@ namespace SpreadsheetGUI
         public event Backspace backspace;
         public event AddVar addVar;
         public event InsertButton insertButton;
+        public event TargetChanged TargChanged;
 
         public FormulaWizard()
         {
             InitializeComponent();
             control = new WizardController();
 
-            //Set default selections for the combo boxes
-            letterBox.SelectedIndex = 0;
-            numBox.SelectedIndex = 0;
+            
 
             //Register event handlers
             formulaBox.Text = control.Formula;
@@ -46,7 +46,7 @@ namespace SpreadsheetGUI
             backspace += control.Backspace;
             addVar += control.AddVariable;
             insertButton += control.InsertResultFormula;
-    
+            TargChanged += control.TargetChanged;
         }
 
         private void plusBut_Click(object sender, EventArgs e)
@@ -176,6 +176,28 @@ namespace SpreadsheetGUI
                 else insertBut.Enabled = false;
             }
         }
+
+        
+        
+        private void numBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //Check for circular dependencies again by triggering the TargChanged event
+
+            TargChanged();
+        }
+
+        private void FormulaWizard_Load(object sender, EventArgs e)
+        {
+            //Set default selections for the combo boxes when the form loads
+            letterBox.SelectedIndex = 0;
+            numBox.SelectedIndex = 0;
+        }
+
+        private void letterBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //Check for circular dependencies again by triggering the TargChanged event
+            TargChanged();
+        }
     }
 
     public delegate void InsertFormula(string cellName, string contents);
@@ -230,6 +252,15 @@ namespace SpreadsheetGUI
             //Trigger the insertFormula event (notifying the controller of the main window) and close this current window
             insertFormula(cellname, formula);
             mainWindow.control.wizard.Close();
+        }
+
+        public void TargetChanged()
+        {
+            //Check the validity of the current formula and display its status
+            mainWindow.control.wizard.outBox.Text = CheckValidty();
+            if (mainWindow.control.wizard.outBox.Text == "Formula is valid")
+                mainWindow.control.wizard.insertBut.Enabled = true;
+            else mainWindow.control.wizard.insertBut.Enabled = false;
         }
 
         //getter method for the formula string

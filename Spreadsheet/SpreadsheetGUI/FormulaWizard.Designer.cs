@@ -95,6 +95,7 @@
             this.letterBox.Name = "letterBox";
             this.letterBox.Size = new System.Drawing.Size(47, 21);
             this.letterBox.TabIndex = 3;
+            this.letterBox.SelectedIndexChanged += new System.EventHandler(this.letterBox_SelectedIndexChanged);
             // 
             // numBox
             // 
@@ -198,11 +199,12 @@
             "96",
             "97",
             "98",
-            "99 "});
+            "99"});
             this.numBox.Location = new System.Drawing.Point(150, 27);
             this.numBox.Name = "numBox";
             this.numBox.Size = new System.Drawing.Size(47, 21);
             this.numBox.TabIndex = 4;
+            this.numBox.SelectedIndexChanged += new System.EventHandler(this.numBox_SelectedIndexChanged);
             // 
             // label2
             // 
@@ -414,6 +416,7 @@
             this.Location = new System.Drawing.Point(0, 779);
             this.Name = "FormulaWizard";
             this.Text = "Formula Wizard";
+            this.Load += new System.EventHandler(this.FormulaWizard_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -437,8 +440,8 @@
         private System.Windows.Forms.Button rParBut;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button addVarBut;
-        private System.Windows.Forms.Button insertBut;
-        private System.Windows.Forms.TextBox outBox;
+        public System.Windows.Forms.Button insertBut;
+        public System.Windows.Forms.TextBox outBox;
         private System.Windows.Forms.Button backBut;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox constBox;

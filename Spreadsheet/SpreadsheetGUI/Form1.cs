@@ -218,9 +218,10 @@ namespace SpreadsheetGUI
             //Display the cell's new value
             int col;
             int row;
-            double coords = GetCellCoords(cellname);
-            col = (int)coords;
-            row = (int)((coords - col) * 100);
+            string coords = GetCellCoords(cellname);
+            string[] coordsArray = coords.Split(',');
+            col = int.Parse(coordsArray[0]);
+            row = int.Parse(coordsArray[1]);
             mainWindow.mainPanel.SetValue(col, row, GetCellValue(GetCellName(col, row)));
             mainWindow.valBox.Text = GetCellValue(cellname);
         }
@@ -401,9 +402,10 @@ namespace SpreadsheetGUI
             {
                 int col;
                 int row;
-                double coords = GetCellCoords(s);
-                col = (int)coords;
-                row = (int)((coords - col) * 100);
+                string coords = GetCellCoords(s);
+                string[] coordsArray = coords.Split(',');
+                col = int.Parse(coordsArray[0]);
+                row = int.Parse(coordsArray[1]);
                 mainWindow.mainPanel.SetValue(col, row, GetCellValue(s));
             }
         }
@@ -413,12 +415,13 @@ namespace SpreadsheetGUI
         /// <summary>
         /// Returns the coords of a given cell name in the form of a double. The column is the number before the decimal, the row is the number after the decimal
         /// </summary>
-        private double GetCellCoords(string cellName)
+        private string GetCellCoords(string cellName)
         {
             cellName = cellName.ToLower();
             string letters = "abcdefghijklmnopqrstuvwxyz";
-            double result = letters.IndexOf(cellName.Substring(0, 1));
-            result += (double.Parse(cellName.Substring(1)) - 1) / 100;
+            string result = letters.IndexOf(cellName.Substring(0, 1)).ToString();
+            result += ",";
+            result += (int.Parse(cellName.Substring(1))-1).ToString();
             return result;
         }
 
