@@ -49,7 +49,7 @@ Limitations:
 If you open two instances of the main Spreadsheet program through the use of the "new" menu option, and then open a formula wizard on the other, you will be unable to open a formula wizard on the second window
 The formula wizard can be opened on the second window as long as there is not an already existing formula wizard open. I don't know why this is
 
-
+The formula wizard cannot detect division by zero unless it explicitly contains "/0" in it. Without access to the values of the cells, and the lookup function used to evaluate, there is no way to check for this in real time without creating a copy of the spreadsheet
 
 
 External Code Resources:

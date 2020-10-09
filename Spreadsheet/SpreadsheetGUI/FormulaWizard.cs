@@ -1,4 +1,5 @@
 ﻿using SpreadsheetUtilities;
+using SS;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -252,6 +253,17 @@ namespace SpreadsheetGUI
             {
                 return e.Message;
             }
+
+            string target = mainWindow.control.wizard.letterBox.Text.ToLower();
+            target += mainWindow.control.wizard.numBox.Text;
+
+            if (formula.Contains(target))
+            {
+                return "Your formula cannot contain its target cell as a reference. Please remove the variable " + target + " and try again";
+            }
+
+            if (formula.Contains("/0"))
+                return "Your formula cannot contain division by zero";
 
             return "Formula is valid";
            

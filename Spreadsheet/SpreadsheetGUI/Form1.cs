@@ -330,6 +330,12 @@ namespace SpreadsheetGUI
                 SystemSounds.Hand.Play();
                 return new List<string>(spreadsheet.GetNamesOfAllNonemptyCells());
             }
+            catch (CircularException)
+            {
+                mainWindow.outputBox.Text = "Your formula is dependent on its own value. Please try again";
+                SystemSounds.Hand.Play();
+                return new List<string>(spreadsheet.GetNamesOfAllNonemptyCells());
+            }
         }
 
         /// <summary>
