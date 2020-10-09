@@ -195,7 +195,7 @@ namespace SpreadsheetGUI
 
         public void KeyPressedHandler(KeyPressEventArgs e)
         {
-            mainWindow.mainPanel.GetSelection(out int col, out int row);
+           mainWindow.mainPanel.GetSelection(out int col, out int row);
             //If an enter key was pressed, update the value of the selected cell
             if (e.KeyChar == '\r')
             {
@@ -205,6 +205,7 @@ namespace SpreadsheetGUI
                 //Display the cell's value
                 mainWindow.mainPanel.SetValue(col, row, GetCellValue(GetCellName(col, row)));
                 mainWindow.valBox.Text = GetCellValue(cellName);
+                e.Handled = true;
             }
 
         }
