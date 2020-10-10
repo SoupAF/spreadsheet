@@ -201,7 +201,17 @@ namespace SpreadsheetGUI
             {
                 //Change the value of the cell and update dependent cells
                 string cellName = GetCellName(col, row);
-                UpdateDependentCells(ChangeCellVal(cellName, mainWindow.contentBox.Text));
+                try { UpdateDependentCells(ChangeCellVal(cellName, mainWindow.contentBox.Text)); }
+
+                catch (CircularException)
+                {
+                    mainWindow.outputBox.Text = "Your formula cannot be dependent on its own value, even indirectly. Please try again";
+                    //SystemSounds.Hand.Play();
+                    //spreadsheet.SetContentsOfCell(cellName, "");
+                    e.Handled = true;
+                    return;
+                }
+
                 //Display the cell's value
                 mainWindow.mainPanel.SetValue(col, row, GetCellValue(GetCellName(col, row)));
                 mainWindow.valBox.Text = GetCellValue(cellName);
@@ -336,6 +346,7 @@ namespace SpreadsheetGUI
             {
                 mainWindow.outputBox.Text = "Your formula is dependent on its own value. Please try again";
                 SystemSounds.Hand.Play();
+                spreadsheet.SetContentsOfCell(cellName, "");
                 return new List<string>(spreadsheet.GetNamesOfAllNonemptyCells());
             }
         }
@@ -397,7 +408,7 @@ namespace SpreadsheetGUI
         /// <param name="cells"></param>
         private void UpdateDependentCells(List<string> cells)
         {
-            //TODO: Loop through cell names and update all cell vals/content
+            //Loop through all cell names and update their values
             foreach (string s in cells)
             {
                 int col;
