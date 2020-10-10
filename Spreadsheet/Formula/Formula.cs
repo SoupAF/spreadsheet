@@ -87,7 +87,7 @@ namespace SpreadsheetUtilities
         public Formula(String formula, Func<string, string> normalize, Func<string, bool> isValid)
         {
 
-            
+
 
             int openParCount = 0;
             int closeParCount = 0;
@@ -98,18 +98,18 @@ namespace SpreadsheetUtilities
             //Check that all tokens are valid
             for (int i = 0; i < tokens.Count; i++)
             {
-                
+
                 //Check if a token is a number
                 if (!double.TryParse(tokens.ElementAt(i), out _))
                 {
                     //Check that a token is a valid operator
-                    if (tokens.ElementAt(i) != "(" && tokens.ElementAt(i) != ")" && tokens.ElementAt(i) != "+" 
+                    if (tokens.ElementAt(i) != "(" && tokens.ElementAt(i) != ")" && tokens.ElementAt(i) != "+"
                         && tokens.ElementAt(i) != "-" && tokens.ElementAt(i) != "*" && tokens.ElementAt(i) != "/")
                     {
                         //Check if a token is a variable
                         char[] chars = tokens.ElementAt(i).ToCharArray();
 
-                       
+
                         //Check first char
                         if (!Char.IsLetter(chars[0]) && chars[0] != '_')
                             throw new FormulaFormatException("Invalid variable syntax. The first character needs to be a letter");
@@ -179,21 +179,33 @@ namespace SpreadsheetUtilities
                         throw new FormulaFormatException("Your formula cannot have two operators or left parenthesis following one another");
                     }
                 }
-                
+
 
                 //Check the other case, if token1 is not one of the above catgories
                 else
                 {
-                    
+
                     //Make sure token2 is not also in the same category as token1
                     if (token2 != ")" && token2 != "+" && token2 != "-" && token2 != "*" && token2 != "/")
                     {
                         throw new FormulaFormatException("Your formula cannot have two numbers, variables, or right parenthesis following one another");
                     }
                 }
-                
+
             }
 
+            //Check that two parenthesis are not next to eachother wth nothing in between
+            for (int i = 0; i < tokens.Count - 1; i++)
+            {
+                string token1 = tokens.ElementAt(i);
+                string token2 = tokens.ElementAt(i + 1);
+
+                if (token1 == "(" || token2 == ")")
+                {
+                    throw new FormulaFormatException("Parenthesis must have numbers or operators between them, they cannot be empty");
+                }
+
+            }
         }
 
         /// <summary>
@@ -393,9 +405,7 @@ namespace SpreadsheetUtilities
                         {
                             n = lookup(temp);
                         }
-#pragma warning disable CS0168 // Variable is declared but never used
-                        catch (ArgumentException e)
-#pragma warning restore CS0168 // Variable is declared but never used
+                        catch (ArgumentException)
                         {
                             return new FormulaError("Your variable could not be found. Please check that your variable is defined and spelled correctly");
                         }

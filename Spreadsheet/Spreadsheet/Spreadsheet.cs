@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -152,7 +153,7 @@ namespace SS
             }
 
             //Check if content is a formula
-            if (content.StartsWith("="))
+            if (content.StartsWith("=") && content.ElementAt(1) != '=')
             {
                 //remove the "=" and create a new formula
                 return SetCellContents(name, new Formula(content.Substring(1)));
@@ -224,7 +225,7 @@ namespace SS
 
 
 
-            List<string> result = new List<string>(GetCellsToRecalculate(name));
+            
 
 
 
@@ -259,7 +260,7 @@ namespace SS
             }
 
             Changed = true;
-
+            List<string> result = new List<string>(GetCellsToRecalculate(name));
             return result;
         }
 
@@ -268,7 +269,7 @@ namespace SS
 
 
 
-            List<string> result = new List<string>();
+            List<string> result = new List<string>(GetDirectDependents(name));
 
 
             //Get a list of all variables the formula references 
